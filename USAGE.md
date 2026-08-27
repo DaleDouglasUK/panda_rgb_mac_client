@@ -58,15 +58,16 @@ codesign --verify --deep --strict /Applications/PandaRGB.app && echo intact
 codesign -dv /Applications/PandaRGB.app
 ```
 
-The second command should report:
+The first prints `intact` if the bundle has not been altered since it was signed. The second
+prints the bundle's details, and the line to look at is the signature:
 
 ```
-Identifier=dev.sovereignsports.PandaRGB
 Signature=adhoc
 ```
 
-`Signature=adhoc` is expected here. If you ever see a different identifier, or a signature
-claiming an identity, the file did not come from this repository.
+`Signature=adhoc` is what this build is expected to report. If you ever see a signature
+claiming a named identity, or an identifier that does not end in `.PandaRGB`, the file did not
+come from this repository.
 
 If you would rather not accept an unsigned download, build the app yourself from source instead.
 The source is not in this repository; ask, and it can be pointed at.
