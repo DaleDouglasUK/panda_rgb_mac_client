@@ -1,0 +1,50 @@
+# Two gates on every pull request: it must reference an issue, and it must either change
+# tests or carry a documented waiver in its body. Both are stated in CLAUDE.md; this file is
+# what makes them binding rather than advisory.
+name: pr-policy
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out PR
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Require a linked issue (CLAUDE.md section 3)
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if echo "$BODY" | grep -qiE '(close[sd]?|fix(e[sd])?|resolve[sd]?|refs?) +#[0-9]+'; then
+            echo "Linked issue found."
+          else
+            echo "::error::PR must reference an issue, e.g. 'Closes #123'."
+            exit 1
+          fi
+
+      - name: Require tests or a documented waiver (CLAUDE.md section 6)
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+          BASE: ${{ github.event.pull_request.base.ref }}
+        run: |
+          git fetch -q origin "$BASE"
+          changed="$(git diff --name-only "origin/$BASE...HEAD")"
+          echo "Changed files:"; echo "$changed"
+          if echo "$changed" | grep -qiE '(^|/)(tests?|__tests__|spec)/|[._-](test|spec)\.[a-z0-9]+$|_test\.[a-z0-9]+$|(^|/)test_[^/]+\.[a-z0-9]+$'; then
+            echo "Test changes present."; exit 0
+          fi
+          waiver="$(echo "$BODY" | grep -iE '^Waiver' | sed -E 's/^Waiver[^:]*:[[:space:]]*//I')"
+          if [ -n "$waiver" ] && ! echo "$waiver" | grep -qiE '^(<none>|none|n/?a)$'; then
+            echo "Waiver documented: $waiver"
+            echo "Reminder: the waiver must also be in the commit body and the issue."
+            exit 0
+          fi
+          echo "::error::No test changes and no documented waiver."
+          exit 1

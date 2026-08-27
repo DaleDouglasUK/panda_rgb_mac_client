@@ -1,0 +1,22 @@
+name: Feature request
+description: Propose new functionality or an enhancement
+title: "feat: "
+labels: ["kind/feat", "status/triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What need or pain is this solving?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
